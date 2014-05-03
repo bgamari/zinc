@@ -64,10 +64,16 @@ mod defined_tasks_count {
   }
 }
 
+pub enum Status {
+  Runnable,
+  Blocked
+}
+
 /// Task descriptor, provides task stack pointer.
 pub struct TaskDescriptor {
   pub stack_start: u32,
   pub stack_end: u32,
+  pub status: Status
 }
 
 struct TasksCollection {
@@ -77,7 +83,7 @@ struct TasksCollection {
 
 static mut Tasks: TasksCollection = TasksCollection {
   current_task: 0,
-  tasks: [TaskDescriptor { stack_start: 0, stack_end: 0 }, ..MaxTasksCount]
+  tasks: [TaskDescriptor { stack_start: 0, stack_end: 0, status: Runnable }, ..MaxTasksCount]
 };
 
 impl TasksCollection {
@@ -91,8 +97,10 @@ impl TasksCollection {
       if self.current_task == defined_tasks_count::get() {
         self.current_task = 0;
       }
-      if self.current_task().valid() {
-        break;
+      match self.current_task() {
+        &task if !task.valid()                 => {}
+        &TaskDescriptor {status: Runnable, ..} => break,
+        _                                      => {}
       }
     }
   }
@@ -165,6 +173,7 @@ impl TaskDescriptor {
     TaskDescriptor {
       stack_start: stack_top,
       stack_end: stack_base - stack_size,
+      status: Runnable,
     }
   }
 

@@ -79,3 +79,13 @@ impl SavedState {
 unsafe fn task_finished() {
   asm!("bkpt" :::: "volatile");
 }
+
+#[inline(always)]
+pub unsafe fn disable_irqs() {
+  asm!("cpsd i" :::: "volatile");
+}
+
+#[inline(always)]
+pub unsafe fn enable_irqs() {
+  asm!("cpse i" :::: "volatile");
+}

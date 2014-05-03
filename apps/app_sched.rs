@@ -14,6 +14,7 @@ use zinc::hal::pin::map;
 use zinc::drivers::chario::CharIO;
 use zinc::os::task;
 use zinc::os::debug;
+use zinc::os::mutex;
 
 #[cfg(mcu_lpc17xx)] use zinc::hal::lpc17xx;
 
