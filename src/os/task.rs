@@ -76,18 +76,23 @@ pub struct TaskDescriptor {
   pub status: Status
 }
 
+impl TaskDescriptor {
+  pub fn block(&mut self) { self.status = Blocked; }
+  pub fn unblock(&mut self) { self.status = Runnable; }
+}
+
 struct TasksCollection {
   pub current_task: uint,
   pub tasks: [TaskDescriptor, ..MaxTasksCount],
 }
 
-static mut Tasks: TasksCollection = TasksCollection {
+pub static mut Tasks: TasksCollection = TasksCollection {
   current_task: 0,
   tasks: [TaskDescriptor { stack_start: 0, stack_end: 0, status: Runnable }, ..MaxTasksCount]
 };
 
 impl TasksCollection {
-  fn current_task<'a>(&'a mut self) -> &'a mut TaskDescriptor {
+  pub fn current_task<'a>(&'a mut self) -> &'a mut TaskDescriptor {
     &mut self.tasks[self.current_task]
   }
 

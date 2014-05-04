@@ -80,12 +80,20 @@ unsafe fn task_finished() {
   asm!("bkpt" :::: "volatile");
 }
 
+/// Phantom type to indicate that interrupts are disabled
+pub struct IrqDisabled;
+
 #[inline(always)]
-pub unsafe fn disable_irqs() {
-  asm!("cpsd i" :::: "volatile");
+pub fn disable_irqs() -> IrqDisabled {
+  unsafe {
+    asm!("cpsid i" :::: "volatile");
+  }
+  IrqDisabled
 }
 
 #[inline(always)]
-pub unsafe fn enable_irqs() {
-  asm!("cpse i" :::: "volatile");
+pub fn enable_irqs(_: IrqDisabled) {
+  unsafe {
+    asm!("cpsie i" :::: "volatile");
+  }
 }

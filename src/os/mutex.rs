@@ -1,71 +1,69 @@
 #![feature(globs, macro_rules)]
  
 use hal::cortex_m3::sched::{disable_irqs, enable_irqs};
-use os::task::{TaskDescriptor, Tasks, Status, Blocked, Runnable, task_scheduler};
-use lib::linked_list::*;
+use os::task::{TaskDescriptor, Tasks, task_scheduler};
+use lib::queue::*;
 use core::option::{Option, None, Some};
 use core::cell::{Cell};
 use core::ops::{Drop};
 
-struct WaitingTask<'a> {
-  task: &'a TaskDescriptor,
-  next: ListCell<'a, WaitingTask<'a>>
+pub struct StaticMutex {
+  owner: Cell<Option<*mut TaskDescriptor>>,
+  waiting: Queue<*mut TaskDescriptor>
 }
 
-//deriveLinkedList!(WaitingTask, next)
-impl<'a> LinkedList<'a> for WaitingTask<'a> {
-    fn get_cell(&'a self) -> &'a ListCell<'a, WaitingTask<'a>> { return &self.next; }
-}
+pub struct Guard<'a>(&'a StaticMutex);
 
-pub struct Mutex<'a> {
-  owner: Cell<Option<&'a mut TaskDescriptor>>,
-  waiting: ListCell<'a, WaitingTask<'a>>
-}
-
-impl<'a> Mutex<'a> {
-  fn lock(&'a self) {
-    disable_irqs();
-    match self.owner.get() {
-      None    => { },
-      Some(owner) => unsafe {
-        let task = Tasks.current_task();
-        let mut waiting = WaitingTask{task: task, next: ListCell::new()};
-        task.status = Blocked;
-        self.waiting.append(&waiting);
-        enable_irqs();
-        task_scheduler();
+impl StaticMutex {
+  // This is a bit subtle:
+  // We need to add ourselves to the mutex's waiting list. To do this
+  // we allocate a list item on the local stack, append it to the
+  // waiting list, and block. When the task before us unlocks the mutex,
+  // they will wake us up. Finally, when we are executing again we
+  // remove our entry from the list.
+  pub fn lock<'a>(&'a self) -> Guard<'a> {
+    unsafe {
+      let irq_disabled = disable_irqs();
+      match self.owner.get() {
+        None    => { },
+        Some(_) => {
+          let mut waiting = Node::new(Tasks.current_task() as *mut TaskDescriptor);
+          Tasks.current_task().block();
+          self.waiting.push(&mut waiting, irq_disabled);
+          enable_irqs(irq_disabled);
+          task_scheduler();
+          let irq_disabled = disable_irqs();
+          self.waiting.pop(irq_disabled);
+        }
       }
+
+      self.owner.set(Some(Tasks.current_task() as *mut TaskDescriptor));
+      enable_irqs(irq_disabled);
     }
 
-    self.owner.set(Some(Tasks.current_task()));
-    enable_irqs();
+    Guard(self)
   }
 
-  fn unlock(&'a self) {
-    disable_irqs();
-    self.owner.set(None);
-    match self.waiting.pop() {
-      None => { },
-      Some(nextTask) => unsafe {
-        nextTask.task.status = Runnable;
+  fn unlock(&self) {
+    unsafe {
+      let irq_disabled = disable_irqs();
+      self.owner.set(None);
+      match self.waiting.peek() {
+        None => { },
+        Some(nextTask) => {
+          let mut task = *(*nextTask).data;
+          task.unblock();
+        }
       }
+      enable_irqs(irq_disabled);
     }
-    enable_irqs();
   }
 }
 
-pub struct MutexLock<'a>(&'a Mutex<'a>);
-
-impl<'a> MutexLock<'a> {
-  fn new(mutex: &'a Mutex<'a>) -> MutexLock<'a> {
-    mutex.lock();
-    return MutexLock(mutex);
-  }
-}
-
-impl<'a> Drop for MutexLock<'a> {
+#[unsafe_destructor]
+impl<'a> Drop for Guard<'a> {
   fn drop(&mut self) {
-    let &MutexLock(ref mutex) = self;
+    let &Guard(ref mutex) = self;
     mutex.unlock();
   }
 }

@@ -17,4 +17,4 @@
 
 pub mod strconv;
 pub mod volatile_cell;
-pub mod linked_list;
+pub mod queue;
