@@ -2,8 +2,8 @@
 // all links are uint to allow for static initialization
 
 use hal::cortex_m3::sched::IrqDisabled;
-use core::cell::Cell;
-use core::option::{Option,Some,None};
+use std::cell::Cell;
+use std::option::{Option,Some,None};
 
 pub struct Node<T> {
     pub next: Cell<*mut Node<T>>,

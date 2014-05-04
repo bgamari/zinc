@@ -3,9 +3,9 @@
 use hal::cortex_m3::sched::{disable_irqs, enable_irqs};
 use os::task::{TaskDescriptor, Tasks, task_scheduler};
 use lib::queue::*;
-use core::option::{Option, None, Some};
-use core::cell::{Cell};
-use core::ops::{Drop};
+use std::option::{Option, None, Some};
+use std::cell::{Cell};
+use std::ops::{Drop};
 
 pub struct StaticMutex {
   owner: Cell<Option<*mut TaskDescriptor>>,
