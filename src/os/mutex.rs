@@ -20,15 +20,18 @@ use core::ops::Drop;
 use core::ty::Unsafe;
 
 use hal::cortex_m3::sched::NoInterrupts;
+use hal::cortex_m3::lock::{Lock, STATIC_LOCK};
 use lib::queue::{Queue, Node};
 use os::task::{TaskDescriptor, Tasks};
 
 pub struct Mutex {
+  lock: Lock,
   owner: Unsafe<Option<*mut TaskDescriptor>>,
   waiting: Queue<*mut TaskDescriptor>
 }
 
 pub static MUTEX_INIT : Mutex = Mutex {
+  lock: STATIC_LOCK,
   owner: Unsafe { value: None, marker1: marker::InvariantType },
   waiting: Queue {
     head: Unsafe { value: 0 as *mut Node<*mut TaskDescriptor>, marker1: marker::InvariantType },

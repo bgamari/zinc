@@ -5,6 +5,8 @@
 
 extern crate zinc;
 
+extern crate core;
+
 #[cfg(mcu_lpc17xx)] use zinc::boards::mbed_lpc1768;
 use zinc::hal::gpio::GPIOConf;
 use zinc::hal::init::SysConf;
@@ -14,6 +16,9 @@ use zinc::hal::pin::map;
 use zinc::drivers::chario::CharIO;
 use zinc::os::task;
 use zinc::os::debug;
+
+use zinc::hal::cortex_m3::lock::{Lock, Guard, STATIC_LOCK};
+use core::option::{Option, Some, None};
 
 #[cfg(mcu_lpc17xx)] use zinc::hal::lpc17xx;
 
@@ -64,15 +69,23 @@ fn main_task(arg: u32) {
   let timer = &platform.timer.setup() as &Timer;
   let d = debug::io();
   d.puts("task "); d.puti(arg); d.puts(" started\n");
+  let lock: Lock = STATIC_LOCK;
 
   task::define_task(task, 1, 512, false);
   task::define_task(task, 2, 512, false);
 
   loop {
     timer.wait(2);
+    {
+      let a = match lock.try_lock() {
+          None => {},
+          Some(guard) => guard(),
+      };
+    }
     d.puts("running in main task\n");
   }
 }
+
 
 #[no_split_stack]
 pub fn main() {
