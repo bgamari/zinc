@@ -24,3 +24,7 @@ pub use super::cortex_common::systick;
 pub use super::cortex_common::scb;
 pub use super::cortex_common::nvic;
 pub use super::cortex_common::mpu;
+#[cfg(cfg_multitasking)]
+#[path="../cortex_m3/sched.rs"] pub mod sched;
+#[cfg(cfg_multitasking)]
+#[path="../cortex_m3/sched.rs"] pub mod lock;
