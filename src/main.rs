@@ -28,19 +28,20 @@ linked into user's own applications.
 
 ### Supported architectures
 
-ARM is the only architecture, supported at the moment. Zinc can be compiled for
+ARM is the only architecture supported at the moment. Zinc can be compiled for
 "native" architecture as well, which should be useful only for testing the code,
 though.
 
 ### Supported ARM MCUs
 
-Two MCUs are supported at the moment, specifically
+Three MCUs are supported at the moment, specifically
 
  * NXP LPC1768
  * ST STM32F407
+ * Freescale K20
 
-The code is generic enough to support other MCUs in the same family (LPC17xx and
-STM32F403/407).
+The code is generic enough to support other MCUs in the same family
+(e.g. LPC17xx and STM32F403/407).
 */
 
 extern crate core;
