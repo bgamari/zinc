@@ -19,7 +19,7 @@ use core::option::{Option, None, Some};
 use core::ops::Drop;
 use core::ty::Unsafe;
 
-use hal::cortex_m3::sched::NoInterrupts;
+use hal::arch::sched::NoInterrupts;
 use lib::queue::{Queue, Node};
 use os::task::{TaskDescriptor, Tasks};
 

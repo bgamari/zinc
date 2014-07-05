@@ -35,7 +35,7 @@ use core::ops::Deref;
 use core::ptr::RawPtr;
 use core::option::{Option,Some,None};
 
-use hal::cortex_m3::sched::NoInterrupts;
+use hal::arch::sched::NoInterrupts;
 
 /// A queue entry
 pub struct Node<T> {

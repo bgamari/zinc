@@ -18,8 +18,8 @@
 use core::mem::size_of;
 use core::intrinsics::abort;
 
-use hal::cortex_m3::{sched, systick};
-use hal::cortex_m3::sched::NoInterrupts;
+use hal::arch::{sched, systick};
+use hal::arch::sched::NoInterrupts;
 use os::syscall::syscall;
 use hal::stack;
 
@@ -128,7 +128,7 @@ impl TasksCollection {
 /// t should point to initial task.
 #[inline(never)]
 pub fn setup(t: Task, stack_size: u32) {
-  systick::setup(::hal::cortex_m3::systick::CALIBRATED, true);
+  systick::setup(::hal::arch::systick::CALIBRATED, true);
 
   let current_stack = sched::get_current_stack_pointer();
   // User tasks start at this current stack size + reserved size aligned by 4

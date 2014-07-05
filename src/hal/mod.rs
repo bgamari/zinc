@@ -21,6 +21,9 @@ and each such struct has a `setup()` method that configures the hardware
 (returning the object to interact with it where applicable).
 */
 
+// annoyingly, use declarations must precede items
+#[cfg(arch_cortex_m3)] pub use arch = hal::cortex_m3;
+#[cfg(arch_cortex_m4)] pub use arch = hal::cortex_m4;
 
 #[cfg(mcu_lpc17xx)] pub mod lpc17xx;
 #[cfg(mcu_stm32f4)] pub mod stm32f4;
