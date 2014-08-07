@@ -20,10 +20,16 @@
 
 extern crate rustc;
 extern crate syntax;
+extern crate serialize;
 extern crate ioreg;
+
+use std::io;
+use std::io::fs;
+use serialize::json;
 
 use rustc::plugin::Registry;
 use syntax::ast;
+use syntax::parse::token;
 use syntax::ptr::P;
 use syntax::codemap::Span;
 use syntax::ext::base::{ExtCtxt, MacResult};
@@ -37,10 +43,38 @@ pub fn plugin_registrar(reg: &mut Registry) {
   reg.register_macro("ioregs", macro_ioregs);
 }
 
+pub fn get_reg_dump_root(cx: &ExtCtxt) -> Option<Path> {
+  for mi in cx.cfg.iter() {
+    match mi.node {
+      ast::MetaNameValue(ref name, ref value) if name.equiv(&"reg_dump") => {
+        match value.node {
+          ast::LitStr(ref s, _) => return Some(Path::new(s.get())),
+          _ => fail!("Invalid `reg_dump` cfg value"),
+        }
+      },
+      _ => {}
+    }
+  }
+  return None;
+}
+
 pub fn macro_ioregs(cx: &mut ExtCtxt, _: Span, tts: &[ast::TokenTree])
                     -> Box<MacResult+'static> {
   match Parser::new(cx, tts).parse_ioregs() {
     Some(group) => {
+      match get_reg_dump_root(cx) {
+        None => {},
+        Some(mut path) => {
+          for id in cx.mod_path.iter() {
+            path.push(token::get_ident(*id).get().into_string());
+          }
+          fs::mkdir_recursive(&path, io::USER_RWX).unwrap();
+          path.push(group.name.node+".json");
+          let mut file = fs::File::create(&path).unwrap();
+          file.write_str(json::encode(&*group).as_slice());
+        }
+      }
+
       let mut builder = Builder::new();
       let items = builder.emit_items(cx, group);
       MacItems::new(items)
