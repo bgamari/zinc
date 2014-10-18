@@ -10,6 +10,10 @@ use zinc::hal::k20::{pin, watchdog};
 use zinc::hal::pin::Gpio;
 use zinc::hal::cortex_m4::systick;
 
+use zinc::drivers::chario::CharIO;
+use zinc::hal::uart::{Disabled};
+use zinc::hal::k20::uart::{UART, UART0};
+
 /// Wait the given number of SysTick ticks
 pub fn wait(ticks: u32) {
   let mut n = ticks;
@@ -38,10 +42,13 @@ pub unsafe fn main() {
 
   systick::setup(systick::ten_ms().unwrap_or(480000));
   systick::enable();
+  
+  let uart = UART::new(UART0, 115200, 8, Disabled, 1);
   loop {
     led1.set_high();
     wait(10);
+    uart.puts("hi\n");
     led1.set_low();
-    wait(10);
+    wait(100);
   }
 }
