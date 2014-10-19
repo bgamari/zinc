@@ -12,9 +12,11 @@ use zinc::hal::cortex_m4::systick;
 
 use zinc::drivers::chario::CharIO;
 use zinc::hal::k20::sim::reg::SIM;
-use zinc::hal::k20::sim;
 use zinc::hal::uart::{Disabled};
 use zinc::hal::k20::uart::{UART, UART0};
+
+use zinc::hal::k20::i2c::i2c0;
+use zinc::hal::k20::i2c;
 
 /// Wait the given number of SysTick ticks
 pub fn wait(ticks: u32) {
@@ -44,16 +46,25 @@ pub unsafe fn main() {
 
   systick::setup(systick::ten_ms().unwrap_or(480000));
   systick::enable();
-  
+
   SIM.scgc4.set_uart0(true);
   pin::Pin::new(pin::PortA, 2, pin::AltFunction2, None);
   pin::Pin::new(pin::PortA, 1, pin::AltFunction2, None);
   let uart = UART::new(UART0, 264960, 8, Disabled, 1);
+
+  SIM.scgc4.set_i2c0(true);
+  let i2c = i2c0.begin();
   loop {
     led1.set_high();
     wait(10);
     uart.puts("hi\n");
     led1.set_low();
     wait(10);
+
+    let addr = i2c::Address::from_8bit(0x29);
+    match i2c.write(addr, &[0]) {
+      Some(e) => uart.puts("e"),
+      None => {},
+    }
   }
 }
