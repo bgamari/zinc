@@ -17,6 +17,7 @@ use zinc::hal::k20::uart::{UART, UART0};
 
 use zinc::hal::k20::i2c::i2c0;
 use zinc::hal::k20::i2c;
+use zinc::util::debug;
 
 /// Wait the given number of SysTick ticks
 pub fn wait(ticks: u32) {
@@ -52,12 +53,14 @@ pub unsafe fn main() {
   pin::Pin::new(pin::PortA, 1, pin::AltFunction2, None);
   let uart = UART::new(UART0, 264960, 8, Disabled, 1);
 
+  let debug_token = debug::set_backend(&uart);
+
   SIM.scgc4.set_i2c0(true);
   let i2c = i2c0.begin();
   loop {
     led1.set_high();
     wait(10);
-    uart.puts("hi\n");
+    //uart.puts("hi\n");
     led1.set_low();
     wait(10);
 
@@ -73,12 +76,4 @@ pub unsafe fn main() {
 #[no_mangle]
 pub extern fn __morestack() {
   unsafe { core::intrinsics::abort() };
-}
-
-#[no_mangle]
-pub fn __aeabi_memset(dest: *mut u8, size: uint, value: u32) {
-  unsafe {
-    use core::intrinsics::set_memory;
-    set_memory(dest, value as u8, size);
-  }
 }
