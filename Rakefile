@@ -137,6 +137,7 @@ app_tasks = Context.instance.applications.map do |a|
     ],
     produce: "app_#{a}.o".in_intermediate(a),
     recompile_on: [:triple, :platform],
+    debug: true,
   }
 
   link_binary "app_#{a}_elf".to_sym, {
