@@ -37,9 +37,9 @@ pub fn wait(ticks: u32) {
 #[allow(unused_variables)]
 #[allow(dead_code)]
 pub unsafe fn main() {
+  watchdog::init(watchdog::Disabled);
   zinc::hal::mem_init::init_stack();
   zinc::hal::mem_init::init_data();
-  watchdog::init(watchdog::Disabled);
 
   // Pins for MC HCK (http://www.mchck.org/)
   let led1 = pin::Pin::new(pin::PortB, 16, pin::Gpio, Some(zinc::hal::pin::Out));
