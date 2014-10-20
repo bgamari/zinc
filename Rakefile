@@ -65,7 +65,6 @@ compile_rust :zinc_crate, {
   out_dir: true,
   recompile_on: [:triple, :platform],
   debug: true,
-  optimize: 0,
 }
 
 # zinc isr crate
@@ -140,7 +139,6 @@ app_tasks = Context.instance.applications.map do |a|
     produce: "app_#{a}.o".in_intermediate(a),
     recompile_on: [:triple, :platform],
     debug: true,
-    optimize: 0,
   }
 
   link_binary "app_#{a}_elf".to_sym, {
