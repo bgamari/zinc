@@ -20,8 +20,6 @@ Some pins that could be configured here may be missing from actual MCU depending
 on the package.
 */
 
-use core::option::Option;
-
 use super::sim;
 
 use self::Port::*;
@@ -84,21 +82,20 @@ pub enum SlewRate {
 }
 
 impl Pin {
-  /// Create and setup a Pin.
+  /// Create and setup a Pin in open-drain mode.
   pub fn new(port: Port, pin_index: u8, function: Function,
-      gpiodir: Option<::hal::pin::GpioDirection>) -> Pin {
+      pull: PullConf, open_drain: bool) -> Pin {
     let pin = Pin {
       port: port,
       pin: pin_index,
     };
-    pin.setup_regs(function, gpiodir, PullNone,
-                   DriveStrengthHigh, SlewSlow, false, false);
+    pin.setup_regs(function, pull, DriveStrengthHigh, SlewSlow,
+                   false, open_drain);
 
     pin
   }
 
   fn setup_regs(&self, function: Function,
-      gpiodir: Option<::hal::pin::GpioDirection>,
       pull: PullConf, drive_strength: DriveStrength,
       slew_rate: SlewRate, filter: bool, open_drain: bool) {
     use self::reg::Port_pcr_ps as ps;
@@ -130,20 +127,6 @@ impl Pin {
       .set_ode(open_drain)
       .set_dse(dse)
       .set_mux(function as u32);
-
-    if function == Gpio {
-      (self as &::hal::pin::Gpio).set_direction(gpiodir.unwrap());
-    }
-  }
-
-  fn gpioreg(&self) -> &'static reg::Gpio {
-    match self.port {
-      PortA => &reg::GPIO_A,
-      PortB => &reg::GPIO_B,
-      PortC => &reg::GPIO_C,
-      PortD => &reg::GPIO_D,
-      PortE => &reg::GPIO_E,
-    }
   }
 
   fn pcr(&self) -> &'static reg::Port_pcr {
@@ -158,21 +141,51 @@ impl Pin {
   }
 }
 
-impl ::hal::pin::Gpio for Pin {
+/// A pin configured as a GPIO
+pub struct GpioPin {
+  pin: Pin
+}
+
+impl GpioPin {
+  /// Configure a `Pin` as a GPIO pin.
+  pub fn from_pin(pin: Pin, gpiodir: ::hal::pin::GpioDirection) -> GpioPin {
+    let pin = GpioPin {pin: pin};
+    (&pin as &::hal::pin::Gpio).set_direction(gpiodir);
+    pin
+  }
+
+  /// Create and setup a GPIO Pin.
+  pub fn new(port: Port, pin_index: u8,
+      gpiodir: ::hal::pin::GpioDirection) -> GpioPin {
+    GpioPin::from_pin(Pin::new(port, pin_index, Gpio, PullNone, false), gpiodir)
+  }
+
+  fn gpioreg(&self) -> &'static reg::Gpio {
+    match self.pin.port {
+      PortA => &reg::GPIO_A,
+      PortB => &reg::GPIO_B,
+      PortC => &reg::GPIO_C,
+      PortD => &reg::GPIO_D,
+      PortE => &reg::GPIO_E,
+    }
+  }
+}
+
+impl ::hal::pin::Gpio for GpioPin {
   /// Sets output GPIO value to high.
   fn set_high(&self) {
-    self.gpioreg().psor.set_ptso(self.pin as uint, true);
+    self.gpioreg().psor.set_ptso(self.pin.pin as uint, true);
   }
 
   /// Sets output GPIO value to low.
   fn set_low(&self) {
-    self.gpioreg().pcor.set_ptco(self.pin as uint, true);
+    self.gpioreg().pcor.set_ptco(self.pin.pin as uint, true);
   }
 
   /// Returns input GPIO level.
   fn level(&self) -> ::hal::pin::GpioLevel {
     let reg = self.gpioreg();
-    match reg.pdir.pdi(self.pin as uint) {
+    match reg.pdir.pdi(self.pin.pin as uint) {
       false => ::hal::pin::Low,
       _     => ::hal::pin::High,
     }
@@ -186,7 +199,7 @@ impl ::hal::pin::Gpio for Pin {
       ::hal::pin::In  => pdd::INPUT,
       ::hal::pin::Out => pdd::OUTPUT,
     };
-    reg.pddr.set_pdd(self.pin as uint, val);
+    reg.pddr.set_pdd(self.pin.pin as uint, val);
   }
 }
 
