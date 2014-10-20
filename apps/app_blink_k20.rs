@@ -68,9 +68,14 @@ pub unsafe fn main() {
     wait(10);
 
     let addr = i2c::Address::from_7bit(0x29);
-    match i2c.write(addr, &[0]) {
+    match i2c.write(addr, &[0x12]) {
       Some(e) => uart.puts("e"),
       None => {},
+    }
+    let mut ret = [0];
+    match i2c.read(addr, &mut ret) {
+      Some(e) => uart.puts("e"),
+      None => uart.puti(ret[0] as u32),
     }
   }
 }
