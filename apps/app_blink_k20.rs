@@ -67,7 +67,7 @@ pub unsafe fn main() {
     led1.set_low();
     wait(10);
 
-    let addr = i2c::Address::from_8bit(0x29);
+    let addr = i2c::Address::from_7bit(0x29);
     match i2c.write(addr, &[0]) {
       Some(e) => uart.puts("e"),
       None => {},
