@@ -17,7 +17,7 @@ use zinc::hal::k20::uart::{UART, UART0};
 
 use zinc::hal::k20::i2c::i2c0;
 use zinc::hal::k20::i2c;
-use zinc::util::debug;
+use zinc::os::debug;
 
 /// Wait the given number of SysTick ticks
 pub fn wait(ticks: u32) {
