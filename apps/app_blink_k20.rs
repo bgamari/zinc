@@ -43,19 +43,22 @@ pub unsafe fn main() {
   zinc::hal::mem_init::init_data();
 
   // Pins for MC HCK (http://www.mchck.org/)
-  let led1 = pin::Pin::new(pin::PortB, 16, pin::Gpio, Some(zinc::hal::pin::Out));
+  let led1 = pin::GpioPin::new(pin::PortB, 16, zinc::hal::pin::Out);
 
   systick::setup(systick::ten_ms().unwrap_or(480000));
   systick::enable();
 
   SIM.scgc4.set_uart0(true);
-  pin::Pin::new(pin::PortA, 2, pin::AltFunction2, None);
-  pin::Pin::new(pin::PortA, 1, pin::AltFunction2, None);
+  pin::Pin::new(pin::PortA, 2, pin::AltFunction2, pin::PullNone, false);
+  pin::Pin::new(pin::PortA, 1, pin::AltFunction2, pin::PullNone, false);
   let uart = UART::new(UART0, 264960, 8, Disabled, 1);
 
   let debug_token = debug::set_backend(&uart);
 
   SIM.scgc4.set_i2c0(true);
+
+  let scl = pin::Pin::new(pin::PortB, 0, pin::AltFunction2, pin::PullNone, true);
+  let sda = pin::Pin::new(pin::PortB, 1, pin::AltFunction2, pin::PullNone, true);
   let i2c = i2c0.begin();
   loop {
     led1.set_high();
