@@ -15,6 +15,7 @@
 
 //! HAL for Freescale Kinetis K20.
 
+pub mod isr;
 pub mod sim;
 pub mod pin;
 pub mod uart;

@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use core::option::{Option, Some, None};
+use core::option::{Some, None, Option};
 
 extern {
   fn isr_dma_0();
@@ -63,15 +63,6 @@ extern {
   fn isr_port_e();
   fn isr_soft();
 }
-
-#[link_section=".flash_configuration"]
-#[allow(non_upper_case_globals)]
-pub static FlashConfigField: [uint, ..4] = [
-    0xFFFFFFFF,
-    0xFFFFFFFF,
-    0xFFFFFFFF,
-    0xFFFFFFFE,
-];
 
 #[allow(non_upper_case_globals)]
 const ISRCount: uint = 46;

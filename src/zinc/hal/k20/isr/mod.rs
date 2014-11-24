@@ -1,5 +1,6 @@
 // Zinc, the bare metal stack for rust.
-// Copyright 2014 Vladimir "farcaller" Pouzanov <farcaller@gmail.com>
+// Copyright 2014 Ben Gamari <bgamari@gmail.com>
+// Based upon work by Ben Harris <mail@bharr.is>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,22 +14,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! This file is not part of zinc crate, it is linked separately, alongside the
-//! ISRs for the platform.
+//! Interrrupt handlers
 
-#![feature(asm, globs, lang_items)]
-#![crate_name="isr"]
-#![crate_type="staticlib"]
-#![no_std]
+#[cfg(mcu_k20)] pub use self::k20::*;
+#[cfg(mcu_k20)] mod k20;
 
-extern crate core;
-
-#[path="cortex_m3/isr.rs"] pub mod isr_cortex_m3;
-
-#[cfg(mcu_lpc17xx)]
-#[path="lpc17xx/isr.rs"] pub mod isr_lpc17xx;
-
-#[cfg(mcu_k20)]
-#[path="k20/isr/mod.rs"] pub mod isr_k20;
-
-#[path="../util/lang_items.rs"] mod lang_items;
+#[link_section=".flash_configuration"]
+#[allow(non_upper_case_globals)]
+pub static FlashConfigField: [uint, ..4] = [
+    0xFFFFFFFF,
+    0xFFFFFFFF,
+    0xFFFFFFFF,
+    0xFFFFFFFE,
+];
